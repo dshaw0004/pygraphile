@@ -31,6 +31,17 @@ Be respectful and inclusive. We want this to be a welcoming community for everyo
 6. Update documentation as needed
 7. Submit a pull request
 
+### AI Usage Disclosure
+
+Contributors are welcome to use AI tools to assist with their contributions. However, **you must disclose any AI-generated changes** in your pull request:
+
+- **List which changes were made with AI assistance** in the PR description
+- **Explain what those changes do in your own words** - do not use AI to write the explanation
+- Be transparent about the extent of AI involvement (e.g., "AI generated the initial structure", "AI helped refactor function X")
+- Take full responsibility for reviewing and understanding all AI-generated code before submitting
+
+This policy ensures transparency and helps maintain code quality and understanding across the project.
+
 ## Development Setup
 
 ### Using uv (recommended)
