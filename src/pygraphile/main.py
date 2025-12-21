@@ -1,5 +1,9 @@
 import sqlite3
 
+from ariadne import QueryType, make_executable_schema, gql
+from ariadne.asgi import GraphQL
+from fastapi import FastAPI
+
 from utils import get_schema_from_table_name, generate_query_type, generate_type_defs
 
 __all__ = ["PyGraphile"]
@@ -36,6 +40,15 @@ class PyGraphile:
         print(self.gql_type_def)
         print(self.gql_query_types)
 
+        query = QueryType()
 
-if '__main__' == __name__:
-    PyGraphile()
+        @query.field('*')
+        def resolver(*args):
+            print(*args)
+            return 'helo'
+
+        self.schema = make_executable_schema(self.gql_type_def, query)
+
+    def get_query_app(self):
+        return GraphQL(self.schema, debug=True)
+
