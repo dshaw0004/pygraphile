@@ -52,9 +52,9 @@ from pygraphile import Pygraphile
 ## 🗺️ Roadmap
 
 - [x] Project setup and structure
-- [ ] SQLite schema introspection
-- [ ] GraphQL schema generation
-- [ ] Query resolver implementation
+- [x] SQLite schema introspection
+- [x] GraphQL schema generation
+- [x] Query resolver implementation
 - [ ] Mutation support
 - [ ] PostgreSQL support
 - [ ] MySQL support
