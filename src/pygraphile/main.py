@@ -25,6 +25,7 @@ class PyGraphile:
             print('need to implement this')
 
         self.con = sqlite3.connect(db_name)
+        self.con.row_factory = sqlite3.Row
         self.cursor = self.con.cursor()
 
         result: list[tuple[str,]] = self.cursor.execute(
@@ -42,13 +43,27 @@ class PyGraphile:
 
         query = QueryType()
 
-        @query.field('*')
-        def resolver(*args):
-            print(*args)
-            return 'helo'
+        # dynamically attach resolvers 
+        for table in self.tables: 
+            query.set_field(table, self.make_resolver(table))
 
-        self.schema = make_executable_schema(self.gql_type_def, query)
+        type_defs = self.gql_type_def + "\n" + self.gql_query_types
+        self.schema = make_executable_schema(type_defs, query)
 
     def get_query_app(self):
         return GraphQL(self.schema, debug=True)
 
+    def make_resolver(self, table_name: str):
+        def resolver(_, info, **kwargs): 
+            sql = f"SELECT * FROM {table_name} LIMIT 1" 
+            rows = self.cursor.execute(sql).fetchall() 
+            return [dict(row) for row in rows] 
+        return resolver
+
+
+# initialize FastAPI 
+app = FastAPI() 
+# initialize PyGraphile 
+pg = PyGraphile(db_name="pygraphile.sqlite") 
+# mount Ariadne GraphQL app at /graphql 
+app.mount("/graphql", pg.get_query_app())
