@@ -1,70 +1,66 @@
 import sqlite3
 
-from ariadne import QueryType, make_executable_schema, gql
+from ariadne import QueryType, make_executable_schema
 from ariadne.asgi import GraphQL
-from fastapi import FastAPI
 
-from utils import get_schema_from_table_name, generate_query_type, generate_type_defs
+from .utils import get_schema_from_table_name, generate_query_type, generate_type_defs
 
 __all__ = ["PyGraphile"]
 
 
 class PyGraphile:
-    def __init__(self,
-                 db_name: str = 'pygraphile.sqlite',
-                 db_type: str = 'sqlite3',
-                 migration_folder: str = 'nomigration',
-                 ):
+    def __init__(
+        self,
+        db_name: str = 'pygraphile.sqlite',
+        db_type: str = 'sqlite3',
+        migration_folder: str = 'nomigration',
+        debug: bool = False,
+    ):
+        if db_type != 'sqlite3':
+            raise ValueError(f"Unsupported database type: '{db_type}'. Currently only 'sqlite3' is supported.")
 
-        if 'sqlite3' != db_type:
-            print('this database is not supported yet')
-            exit(1)
-
-        if 'nomigration' != migration_folder:
+        if migration_folder != 'nomigration':
             # TODO: apply migration
             print('need to implement this')
 
+        self._debug = debug
         self.con = sqlite3.connect(db_name)
         self.con.row_factory = sqlite3.Row
         self.cursor = self.con.cursor()
 
         result: list[tuple[str,]] = self.cursor.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").fetchall()
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        ).fetchall()
         self.tables = [res[0] for res in result]
-        print(f'Following tables detected {self.tables}')
+        print(f'Following tables detected: {self.tables}')
 
-        self.table_schemas = {table: get_schema_from_table_name(
-            self.cursor, table) for table in self.tables}
+        self.table_schemas = {
+            table: get_schema_from_table_name(self.cursor, table)
+            for table in self.tables
+        }
 
         self.gql_type_def: str = generate_type_defs(self.table_schemas)
         self.gql_query_types: str = generate_query_type(self.table_schemas)
-        print(self.gql_type_def)
-        print(self.gql_query_types)
 
         query = QueryType()
 
-        # dynamically attach resolvers 
-        for table in self.tables: 
+        # dynamically attach resolvers
+        for table in self.tables:
             query.set_field(table, self.make_resolver(table))
 
         type_defs = self.gql_type_def + "\n" + self.gql_query_types
         self.schema = make_executable_schema(type_defs, query)
 
     def get_query_app(self):
-        return GraphQL(self.schema, debug=True)
+        return GraphQL(self.schema, debug=self._debug)
 
     def make_resolver(self, table_name: str):
-        def resolver(_, info, **kwargs): 
-            sql = f"SELECT * FROM {table_name} LIMIT 1" 
-            rows = self.cursor.execute(sql).fetchall() 
-            return [dict(row) for row in rows] 
+        # Quote the table name to prevent SQL injection
+        safe_table = table_name.replace('"', '""')
+
+        def resolver(_, info, **kwargs):
+            sql = f'SELECT * FROM "{safe_table}"'
+            rows = self.cursor.execute(sql).fetchall()
+            return [dict(row) for row in rows]
+
         return resolver
-
-
-# if __name__ == "__main__":
-#     # initialize FastAPI 
-#     app = FastAPI() 
-#     # initialize PyGraphile 
-#     pg = PyGraphile(db_name="pygraphile.sqlite") 
-#     # mount Ariadne GraphQL app at /graphql 
-#     app.mount("/graphql", pg.get_query_app())

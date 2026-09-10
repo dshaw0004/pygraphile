@@ -29,7 +29,7 @@ def generate_type_defs(tables):
     for table_name, columns in tables.items():
         fields = []
         for col in columns:
-            gql_type = SQL_TO_GRAPHQL.get(col["type"].upper(), "String")
+            gql_type = SQL_TO_GRAPHQL.get((col["type"] or "").upper(), "String")
             not_null = "!" if col["notnull"] else ""
             fields.append(f"{col['name']}: {gql_type}{not_null}")
         type_def = f"type {table_name.capitalize()} {{\n  " + \
