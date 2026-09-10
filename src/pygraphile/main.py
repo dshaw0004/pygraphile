@@ -61,9 +61,10 @@ class PyGraphile:
         return resolver
 
 
-# initialize FastAPI 
-app = FastAPI() 
-# initialize PyGraphile 
-pg = PyGraphile(db_name="pygraphile.sqlite") 
-# mount Ariadne GraphQL app at /graphql 
-app.mount("/graphql", pg.get_query_app())
+# if __name__ == "__main__":
+#     # initialize FastAPI 
+#     app = FastAPI() 
+#     # initialize PyGraphile 
+#     pg = PyGraphile(db_name="pygraphile.sqlite") 
+#     # mount Ariadne GraphQL app at /graphql 
+#     app.mount("/graphql", pg.get_query_app())
