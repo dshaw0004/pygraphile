@@ -9,6 +9,10 @@ __all__ = ["PyGraphile"]
 
 
 class PyGraphile:
+    def log(self, *args):
+        if self._debug:
+            print(args)
+
     def __init__(
         self,
         db_name: str = 'pygraphile.sqlite',
@@ -32,7 +36,7 @@ class PyGraphile:
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
         ).fetchall()
         self.tables = [res[0] for res in result]
-        print(f'Following tables detected: {self.tables}')
+        # print(f'Following tables detected: {self.tables}')
 
         self.table_schemas = {
             table: get_schema_from_table_name(self.cursor, table)
