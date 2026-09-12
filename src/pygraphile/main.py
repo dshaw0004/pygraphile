@@ -1,6 +1,7 @@
 from typing import Union
 from ariadne import QueryType, make_executable_schema
 from ariadne.asgi import GraphQL
+from ariadne.explorer import ExplorerApollo
 
 from .db.sqlite import SQLiteHandler
 
@@ -51,5 +52,5 @@ class PyGraphile:
         self.schema = make_executable_schema(type_defs, query)
 
     def get_query_app(self):
-        return GraphQL(self.schema, debug=self._debug)
+        return GraphQL(self.schema, debug=self._debug, explorer=ExplorerApollo() if self._debug else None)
 
