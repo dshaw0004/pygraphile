@@ -1,5 +1,5 @@
 import sqlite3
-from typing import Callable
+from typing import Callable, Union
 
 
 SQL_TO_GRAPHQL = {
@@ -52,7 +52,7 @@ def generate_query_type(tables):
 
 class SQLiteHandler:
     tables: list[str]
-    table_schemas: dict[str, list[dict[str, str | int]]]
+    table_schemas: dict[str, list[dict[str, Union[str, int]]]]
     gql_query_types: str
     gql_type_def: str
 
