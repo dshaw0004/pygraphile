@@ -3,19 +3,31 @@ from ariadne import QueryType, make_executable_schema
 from ariadne.asgi import GraphQL
 from ariadne.explorer import ExplorerApollo
 
+
 from .db.sqlite import SQLiteHandler
 
 __all__ = ["PyGraphile"]
-SUPPORTED_DATABASES = 'sqlite3', 'sqlite'
+SUPPORTED_DATABASES = 'sqlite3', 'sqlite', 'mariadb', 'mysql'
 
 
 class PyGraphile:
-    handler: Union[SQLiteHandler, None] = None
+    handler: Union[SQLiteHandler, MariaDBHandler, None] = None
     _debug: bool = False
 
     def log(self, *args):
         if self._debug:
             print(*args)
+
+    def is_supported(self, db_type: str) -> bool:
+        if db_type not in SUPPORTED_DATABASES:
+            raise ValueError(f"Unsupported database type: '{db_type}'. Currently only {SUPPORTED_DATABASES} are supported.")
+        if db_type in ('mariadb', 'mysql'):
+            try:
+                import mariadb
+                return True
+            except ImportError as e:
+                raise ImportError(f"{db_type} support requires extra dependency. Install with: 'pygraphile[{db_type}]'") from e
+        return True
 
     def __init__(
         self,
@@ -25,11 +37,13 @@ class PyGraphile:
         debug: bool = False,
     ):
         self._debug = debug
-        if db_type not in SUPPORTED_DATABASES:
-            raise ValueError(f"Unsupported database type: '{db_type}'. Currently only {SUPPORTED_DATABASES} are supported.")
+        self.is_supported(db_type=db_type)
 
         if db_type == 'sqlite':
             self.handler = SQLiteHandler(db=db_name, logger=self.log)
+        elif db_type in ('mariadb', 'mysql'):
+            from .db.mdb import MariaDBHandler
+            self.handler = MariaDBHandler(db=db_name, logger=self.log)
 
         if migration_folder != 'nomigration':
             # TODO: apply migration

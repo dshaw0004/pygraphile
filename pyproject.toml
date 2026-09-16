@@ -1,6 +1,6 @@
 [project]
 name = "pygraphile"
-version = "0.5.0"
+version = "0.6.1"
 description = "A Python library inspired by PostGraphile - automatically generates GraphQL APIs from databases. Currently supports SQLite with plans for additional database support."
 readme = "README.md"
 authors = [
@@ -30,6 +30,14 @@ classifiers = [
 Homepage = "https://github.com/dshaw0004/pygraphile"
 Repository = "https://github.com/dshaw0004/pygraphile"
 Issues = "https://github.com/dshaw0004/pygraphile/issues"
+
+[project.optional-dependencies]
+mariadb = [
+    "mariadb>=1.1.14",
+]
+mysql = [
+    "mariadb>=1.1.14",
+]
 
 [build-system]
 requires = ["hatchling"]
