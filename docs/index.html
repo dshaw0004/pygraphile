@@ -822,7 +822,7 @@
     <section class="hero">
       <div class="badge">
         <span class="badge-dot" aria-hidden="true"></span>
-        v0.3.0 · Early access
+        v0.6.2 · Early access
       </div>
 
       <h1>
@@ -886,8 +886,8 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon icon-blue" aria-hidden="true">🗄️</div>
-            <h3>SQLite support</h3>
-            <p>Full support for SQLite databases today, with PostgreSQL and MySQL support on the roadmap.</p>
+            <h3>Multi-database support</h3>
+            <p>Full support for SQLite, MariaDB, and MySQL today. PostgreSQL support is on the roadmap.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon icon-cyan" aria-hidden="true">🔌</div>
@@ -920,8 +920,8 @@
             <div class="step-num" aria-hidden="true">1</div>
             <div class="step-content">
               <h3>Point to your database</h3>
-              <p>Pass the path to your SQLite file. PyGraphile connects and reads the schema using PRAGMA
-                introspection.</p>
+              <p>Pass the path to your SQLite file, or a MariaDB/MySQL connection URI. PyGraphile connects
+                and introspects the schema automatically.</p>
             </div>
           </li>
           <li class="step">
@@ -951,12 +951,11 @@
       </div>
     </section>
 
-    <!-- DEMO -->
     <section id="demo" class="demo-section">
       <div class="container">
         <p class="section-label">Quick start</p>
         <h2 class="section-title">Up and running in 3 lines</h2>
-        <p class="section-sub">Install PyGraphile and plug it into your FastAPI app.</p>
+        <p class="section-sub">Install PyGraphile and plug it into your FastAPI app. Works with SQLite, MariaDB, and MySQL.</p>
 
         <div class="demo-grid">
           <div>
@@ -967,22 +966,35 @@
                   <span class="dot-yellow"></span>
                   <span class="dot-green"></span>
                 </div>
-                <span class="code-filename">main.py</span>
+                <span class="code-filename">main.py — SQLite</span>
               </div>
               <pre class="code-body"><span class="kw">from</span> <span class="var">pygraphile</span> <span class="kw">import</span> <span class="cls">PyGraphile</span>
 <span class="kw">from</span> <span class="var">fastapi</span> <span class="kw">import</span> <span class="cls">FastAPI</span>
-<span class="kw">import</span> <span class="var">uvicorn</span>
 
 <span class="var">app</span> <span class="op">=</span> <span class="cls">FastAPI</span>()
 
 <span class="cm"># Point to your SQLite database</span>
-<span class="var">pg</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(<span class="str">'mydb.sqlite'</span>)
+<span class="var">pg</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(<span class="str">'mydb.sqlite'</span>, <span class="var">db_type</span><span class="op">=</span><span class="str">'sqlite'</span>)
 
 <span class="cm"># Mount the GraphQL app</span>
-<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">pg</span>.<span class="fn">get_query_app</span>())
+<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">pg</span>.<span class="fn">get_query_app</span>())</pre>
+            </div>
 
-<span class="kw">if</span> <span class="var">__name__</span> <span class="op">==</span> <span class="str">'__main__'</span>:
-    <span class="var">uvicorn</span>.<span class="fn">run</span>(<span class="var">app</span>, <span class="var">port</span><span class="op">=</span><span class="num">8000</span>)</pre>
+            <div class="code-block" style="margin-top: 1.25rem;">
+              <div class="code-header">
+                <div class="code-dots" aria-hidden="true">
+                  <span class="dot-red"></span>
+                  <span class="dot-yellow"></span>
+                  <span class="dot-green"></span>
+                </div>
+                <span class="code-filename">main.py — MariaDB / MySQL</span>
+              </div>
+              <pre class="code-body"><span class="cm"># Install with: pip install pygraphile[mariadb]</span>
+<span class="var">md</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(
+  <span class="str">'mariadb://user:pass@127.0.0.1:3306/mydb'</span>,
+  <span class="var">db_type</span><span class="op">=</span><span class="str">'mariadb'</span>,
+)
+<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">md</span>.<span class="fn">get_query_app</span>())</pre>
             </div>
           </div>
 
@@ -996,17 +1008,16 @@
                 </div>
                 <span class="code-filename">Generated schema</span>
               </div>
-              <pre class="code-body"><span class="cm"># Given a "users" table with</span>
-<span class="cm"># id INTEGER, name TEXT, email TEXT</span>
+              <pre class="code-body"><span class="cm"># Table "tabapi request log" with</span>
+<span class="cm"># id INT, full name VARCHAR</span>
 
-<span class="gql-kw">type</span> <span class="gql-type">Users</span> {
+<span class="gql-kw">type</span> <span class="gql-type">TabapiRequestLog</span> {
   <span class="gql-field">id</span>: <span class="gql-type">Int</span>
-  <span class="gql-field">name</span>: <span class="gql-type">String</span>
-  <span class="gql-field">email</span>: <span class="gql-type">String</span>
+  <span class="gql-field">full_name</span>: <span class="gql-type">String</span>
 }
 
 <span class="gql-kw">type</span> <span class="gql-type">Query</span> {
-  <span class="gql-field">users</span>: [<span class="gql-type">Users</span>]
+  <span class="gql-field">tabapi_request_log</span>: [<span class="gql-type">TabapiRequestLog</span>]
 }</pre>
             </div>
 
@@ -1021,7 +1032,7 @@
               </div>
               <pre class="code-body"><span class="var">curl</span> <span class="op">-X</span> POST http://localhost:8000/graphql/ \
   <span class="op">-H</span> <span class="str">"Content-Type: application/json"</span> \
-  <span class="op">-d</span> <span class="str">'{"query":"{ users { id name email } }"}'</span></pre>
+  <span class="op">-d</span> <span class="str">'{"query":"{ tabapi_request_log { id full_name } }"}'</span></pre>
             </div>
           </div>
         </div>
@@ -1052,6 +1063,14 @@
             <div class="check-done" aria-hidden="true">✓</div>
             <span>Query resolver implementation</span>
           </li>
+          <li class="roadmap-item done">
+            <div class="check-done" aria-hidden="true">✓</div>
+            <span>MariaDB &amp; MySQL support</span>
+          </li>
+          <li class="roadmap-item done">
+            <div class="check-done" aria-hidden="true">✓</div>
+            <span>Identifier sanitization (spaces &amp; special chars)</span>
+          </li>
           <li class="roadmap-item">
             <div class="check-todo" aria-hidden="true"></div>
             <span>Mutation support</span>
@@ -1059,10 +1078,6 @@
           <li class="roadmap-item">
             <div class="check-todo" aria-hidden="true"></div>
             <span>PostgreSQL support</span>
-          </li>
-          <li class="roadmap-item">
-            <div class="check-todo" aria-hidden="true"></div>
-            <span>MySQL support</span>
           </li>
           <li class="roadmap-item">
             <div class="check-todo" aria-hidden="true"></div>
