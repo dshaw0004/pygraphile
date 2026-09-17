@@ -6,11 +6,11 @@
 
 A Python library inspired by [PostGraphile](https://www.graphile.org/postgraphile/) — automatically generates GraphQL APIs from your database schema.
 
-Point PyGraphile at a SQLite file or a MariaDB/MySQL database, and get a fully working, ASGI-compatible GraphQL API. No schema writing, no manual resolvers.
+Point PyGraphile at a SQLite file or a MariaDB/MySQL database, and get a fully working GraphQL API — as an ASGI app (FastAPI, Starlette, Uvicorn) or a WSGI app (Gunicorn, Flask, Django). No schema writing, no manual resolvers.
 
 ## 🚧 Project Status
 
-**v0.6.2** — Early access. Core query API is working for SQLite, MariaDB, and MySQL. Mutations, filtering, and PostgreSQL are on the roadmap.
+**v0.7.0** — Early access. Core query API is working for SQLite, MariaDB, and MySQL. WSGI support added. Mutations, filtering, and PostgreSQL are on the roadmap.
 
 ## ✨ Features
 
@@ -18,7 +18,7 @@ Point PyGraphile at a SQLite file or a MariaDB/MySQL database, and get a fully w
 - ⚡ **Instant GraphQL** — Generates a complete, executable GraphQL schema with resolvers on the fly
 - 🗄️ **Multi-database support** — SQLite, MariaDB, and MySQL supported today
 - 🔤 **Identifier sanitization** — Table and column names with spaces or special characters are automatically converted to valid GraphQL names (e.g. `"full name"` → `full_name`, `"tabapi request log"` → `TabapiRequestLog`)
-- 🔌 **ASGI native** — Returns a standard ASGI app you can mount into FastAPI, Starlette, or any ASGI framework
+- 🔌 **ASGI & WSGI** — Returns a standard ASGI or WSGI app; mount into FastAPI, Starlette, Gunicorn, or any compatible framework
 - 🐍 **Pure Python** — Supports Python 3.9 through 3.13+
 
 ## 🚀 Installation
@@ -54,7 +54,7 @@ uv pip install -e .
 
 ## 📖 Quick Start
 
-### SQLite
+### ASGI — SQLite (FastAPI / Uvicorn)
 
 ```python
 from pygraphile import PyGraphile
@@ -64,13 +64,13 @@ import uvicorn
 app = FastAPI()
 
 pg = PyGraphile('mydb.sqlite', db_type='sqlite', debug=True)
-app.mount('/graphql', pg.get_query_app())
+app.mount('/graphql', pg.get_asgi_app())
 
 if __name__ == '__main__':
     uvicorn.run(app, port=8000)
 ```
 
-### MariaDB / MySQL
+### ASGI — MariaDB / MySQL (FastAPI / Uvicorn)
 
 ```python
 from pygraphile import PyGraphile
@@ -84,10 +84,44 @@ md = PyGraphile(
     db_type='mariadb',  # or 'mysql'
     debug=True,
 )
-app.mount('/graphql', md.get_query_app())
+app.mount('/graphql', md.get_asgi_app())
 
 if __name__ == '__main__':
     uvicorn.run(app, port=8000)
+```
+
+### WSGI — MariaDB / MySQL (Gunicorn)
+
+```python
+# app.py
+# pip install "pygraphile[mariadb]" gunicorn
+from pygraphile import PyGraphile
+
+pg = PyGraphile(
+    'mariadb://user:password@127.0.0.1:3306/mydb',
+    db_type='mariadb',
+    debug=True,
+)
+application = pg.get_wsgi_app()
+```
+
+```bash
+gunicorn app:application
+```
+
+### WSGI — SQLite (Gunicorn)
+
+```python
+# app.py
+# pip install pygraphile gunicorn
+from pygraphile import PyGraphile
+
+pg = PyGraphile('mydb.sqlite', db_type='sqlite', debug=True)
+application = pg.get_wsgi_app()
+```
+
+```bash
+gunicorn app:application
 ```
 
 ### What gets generated
@@ -127,16 +161,43 @@ With `debug=True`, an Apollo GraphQL Explorer is also available at `/graphql`.
 | `migration_folder` | `str` | `'nomigration'` | Reserved for future migration support |
 | `debug` | `bool` | `False` | Enables Apollo Explorer and verbose logging |
 
-### `pg.get_query_app()`
+### `pg.get_asgi_app()`
 
-Returns an ASGI-compatible [Ariadne](https://ariadne.readthedocs.io/) `GraphQL` app ready to be mounted.
+Returns an ASGI-compatible [Ariadne](https://ariadne.readthedocs.io/) `GraphQL` app ready to be mounted into FastAPI, Starlette, or any ASGI server (Uvicorn, Hypercorn, etc.).
+
+```python
+app.mount('/graphql', pg.get_asgi_app())
+```
+
+### `pg.get_wsgi_app()`
+
+Returns a WSGI-compatible [Ariadne](https://ariadne.readthedocs.io/) `GraphQL` app ready to be served by Gunicorn or any WSGI server.
+
+```python
+# app.py
+application = pg.get_wsgi_app()
+# gunicorn app:application
+```
+
+### `pg.get_query_app(app_type='asgi')`
+
+Convenience method that delegates to `get_asgi_app()` or `get_wsgi_app()` based on the `app_type` argument.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `app_type` | `str` | `'asgi'` | `'asgi'` returns an ASGI app; `'wsgi'` returns a WSGI app |
+
+```python
+pg.get_query_app()           # ASGI (default)
+pg.get_query_app('wsgi')     # WSGI
+```
 
 ### Utility functions
 
 ```python
 from pygraphile import sanitize_field_name, sanitize_type_name
 
-sanitize_field_name("full name")        # → "full_name"
+sanitize_field_name("full name")          # → "full_name"
 sanitize_field_name("tabapi request log") # → "tabapi_request_log"
 sanitize_type_name("tabapi request log")  # → "TabapiRequestLog"
 sanitize_type_name("order-items")         # → "OrderItems"
@@ -149,6 +210,7 @@ sanitize_type_name("order-items")         # → "OrderItems"
 - [x] GraphQL schema generation
 - [x] MariaDB & MySQL support
 - [x] Identifier sanitization (spaces & special characters in table/column names)
+- [x] WSGI support (`get_wsgi_app()`)
 - [ ] Mutation support (INSERT / UPDATE / DELETE)
 - [ ] PostgreSQL support
 - [ ] Filtering & pagination

@@ -1,6 +1,6 @@
 [project]
 name = "pygraphile"
-version = "0.6.2"
+version = "0.7.0"
 description = "A Python library inspired by PostGraphile - automatically generates GraphQL APIs from databases. Currently supports SQLite with plans for additional database support."
 readme = "README.md"
 authors = [

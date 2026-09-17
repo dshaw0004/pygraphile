@@ -822,7 +822,7 @@
     <section class="hero">
       <div class="badge">
         <span class="badge-dot" aria-hidden="true"></span>
-        v0.6.2 · Early access
+        v0.7.0 · Early access
       </div>
 
       <h1>
@@ -891,8 +891,8 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon icon-cyan" aria-hidden="true">🔌</div>
-            <h3>ASGI native</h3>
-            <p>Returns a standard ASGI app you can mount into FastAPI, Starlette, or any ASGI framework.</p>
+            <h3>ASGI &amp; WSGI</h3>
+            <p>Returns a standard ASGI or WSGI app. Mount into FastAPI or Starlette, or serve with Gunicorn — your choice.</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon icon-green" aria-hidden="true">🐍</div>
@@ -943,8 +943,7 @@
             <div class="step-num" aria-hidden="true">4</div>
             <div class="step-content">
               <h3>Mount and serve</h3>
-              <p>Get back an ASGI-compatible GraphQL app powered by Ariadne. Mount it in FastAPI or any ASGI
-                server and you're live.</p>
+              <p>Get back an ASGI or WSGI GraphQL app powered by Ariadne. Mount it in FastAPI for ASGI, or serve it with Gunicorn for WSGI — you're live either way.</p>
             </div>
           </li>
         </ol>
@@ -955,7 +954,7 @@
       <div class="container">
         <p class="section-label">Quick start</p>
         <h2 class="section-title">Up and running in 3 lines</h2>
-        <p class="section-sub">Install PyGraphile and plug it into your FastAPI app. Works with SQLite, MariaDB, and MySQL.</p>
+        <p class="section-sub">Install PyGraphile and plug it into your app. Works with SQLite, MariaDB, and MySQL — via ASGI or WSGI.</p>
 
         <div class="demo-grid">
           <div>
@@ -966,7 +965,7 @@
                   <span class="dot-yellow"></span>
                   <span class="dot-green"></span>
                 </div>
-                <span class="code-filename">main.py — SQLite</span>
+                <span class="code-filename">main.py — ASGI (FastAPI)</span>
               </div>
               <pre class="code-body"><span class="kw">from</span> <span class="var">pygraphile</span> <span class="kw">import</span> <span class="cls">PyGraphile</span>
 <span class="kw">from</span> <span class="var">fastapi</span> <span class="kw">import</span> <span class="cls">FastAPI</span>
@@ -976,8 +975,8 @@
 <span class="cm"># Point to your SQLite database</span>
 <span class="var">pg</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(<span class="str">'mydb.sqlite'</span>, <span class="var">db_type</span><span class="op">=</span><span class="str">'sqlite'</span>)
 
-<span class="cm"># Mount the GraphQL app</span>
-<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">pg</span>.<span class="fn">get_query_app</span>())</pre>
+<span class="cm"># Mount the ASGI GraphQL app</span>
+<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">pg</span>.<span class="fn">get_asgi_app</span>())</pre>
             </div>
 
             <div class="code-block" style="margin-top: 1.25rem;">
@@ -987,14 +986,37 @@
                   <span class="dot-yellow"></span>
                   <span class="dot-green"></span>
                 </div>
-                <span class="code-filename">main.py — MariaDB / MySQL</span>
+                <span class="code-filename">app.py — WSGI (Gunicorn)</span>
+              </div>
+              <pre class="code-body"><span class="cm"># pip install "pygraphile[mariadb]" gunicorn</span>
+<span class="kw">from</span> <span class="var">pygraphile</span> <span class="kw">import</span> <span class="cls">PyGraphile</span>
+
+<span class="var">pg</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(
+  <span class="str">'mariadb://user:pass@127.0.0.1:3306/mydb'</span>,
+  <span class="var">db_type</span><span class="op">=</span><span class="str">'mariadb'</span>,
+)
+
+<span class="cm"># Expose as a WSGI app</span>
+<span class="var">application</span> <span class="op">=</span> <span class="var">pg</span>.<span class="fn">get_wsgi_app</span>()
+
+<span class="cm"># gunicorn app:application</span></pre>
+            </div>
+
+            <div class="code-block" style="margin-top: 1.25rem;">
+              <div class="code-header">
+                <div class="code-dots" aria-hidden="true">
+                  <span class="dot-red"></span>
+                  <span class="dot-yellow"></span>
+                  <span class="dot-green"></span>
+                </div>
+                <span class="code-filename">main.py — MariaDB / MySQL (ASGI)</span>
               </div>
               <pre class="code-body"><span class="cm"># Install with: pip install pygraphile[mariadb]</span>
 <span class="var">md</span> <span class="op">=</span> <span class="cls">PyGraphile</span>(
   <span class="str">'mariadb://user:pass@127.0.0.1:3306/mydb'</span>,
   <span class="var">db_type</span><span class="op">=</span><span class="str">'mariadb'</span>,
 )
-<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">md</span>.<span class="fn">get_query_app</span>())</pre>
+<span class="var">app</span>.<span class="fn">mount</span>(<span class="str">'/graphql'</span>, <span class="var">md</span>.<span class="fn">get_asgi_app</span>())</pre>
             </div>
           </div>
 
@@ -1070,6 +1092,10 @@
           <li class="roadmap-item done">
             <div class="check-done" aria-hidden="true">✓</div>
             <span>Identifier sanitization (spaces &amp; special chars)</span>
+          </li>
+          <li class="roadmap-item done">
+            <div class="check-done" aria-hidden="true">✓</div>
+            <span>WSGI support (<code style="font-family:'JetBrains Mono',monospace;font-size:0.85em;">get_wsgi_app()</code>)</span>
           </li>
           <li class="roadmap-item">
             <div class="check-todo" aria-hidden="true"></div>

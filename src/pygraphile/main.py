@@ -1,7 +1,6 @@
 from typing import TYPE_CHECKING, Union
 
 from ariadne import QueryType, make_executable_schema
-from ariadne.asgi import GraphQL
 from ariadne.explorer import ExplorerApollo
 
 from .db.sqlite import SQLiteHandler
@@ -79,9 +78,26 @@ class PyGraphile:
         type_defs = self.gql_type_def + "\n" + self.gql_query_types
         self.schema = make_executable_schema(type_defs, query)
 
-    def get_query_app(self):
+    def get_asgi_app(self):
+        from ariadne.asgi import GraphQL
         return GraphQL(
             self.schema,
             debug=self._debug,
             explorer=ExplorerApollo() if self._debug else None,
         )
+
+    def get_wsgi_app(self):
+        from ariadne.wsgi import GraphQL
+
+        return GraphQL(
+            self.schema,
+            debug=self._debug,
+            explorer=ExplorerApollo() if self._debug else None,
+        )
+
+    def get_query_app(self, app_type: str = "asgi"):
+        if app_type.lower() == "asgi":
+            return self.get_asgi_app()
+        return self.get_wsgi_app()
+
+

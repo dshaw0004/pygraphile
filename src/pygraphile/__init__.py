@@ -17,7 +17,7 @@ from .utils import (
     sanitize_type_name,
 )
 
-__version__ = "0.6.2"
+__version__ = "0.7.0"
 __author__ = "dshaw0004"
 __all__ = [
     "__version__",
